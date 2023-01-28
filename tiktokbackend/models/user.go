@@ -4,15 +4,14 @@ import "log"
 
 // 映射字段名
 type User struct {
-	ID         int64
-	Username   string `gorm:"column:username"`
-	Password   string `gorm:"column:password"`
-	CreateTime int64  `gorm:"column:createtime"`
+	Id       int64
+	Username string
+	Password string
 }
 
-// 映射表名
+// 表名映射
 func (u User) TableName() string {
-	return "user"
+	return "users"
 }
 
 // 增加
@@ -22,32 +21,43 @@ func SaveUser(user *User) {
 	if err != nil {
 		log.Println("insert user ", err)
 	}
-
 }
 
-// 查询
-func GetById(id int64) User {
-	var user User
-	err := DB.Where("id=?", id).First(&user).Error
-	if err != nil {
-		log.Println("insert user error ", err)
+// GetUserList 获取全部User对象
+func GetUserList() ([]User, error) {
+	users := []User{}
+	if err := DB.Find(&users).Error; err != nil {
+		log.Println(err.Error())
+		return users, err
 	}
-
-	return user
+	return users, nil
 }
 
-// 更新
-func UpdateUser(id int64) {
-	err := DB.Model(&User{}).Where("id=?", id).Update("username", "lisi")
-	if err != nil {
-		log.Println("uopdate user by id is error ", err)
+// GetUserByUsername 根据username获得User对象
+func GetUserByUsername(name string) (User, error) {
+	user := User{}
+	if err := DB.Where("username = ?", name).First(&user).Error; err != nil {
+		log.Println(err.Error())
+		return user, err
 	}
+	return user, nil
 }
 
-// 删除
-func DeleteUser(id int64) {
-	err := DB.Where("id=?", id).Delete(&User{})
-	if err != nil {
-		log.Println("delete user by id is error ", err)
+// GetUserById 根据user_id获得User对象
+func GetUserById(id int64) (User, error) {
+	user := User{}
+	if err := DB.Where("id = ?", id).First(&user).Error; err != nil {
+		log.Println(err.Error())
+		return user, err
 	}
+	return user, nil
+}
+
+// InsertUser 将user插入表内
+func InsertUser(user *User) bool {
+	if err := DB.Create(&user).Error; err != nil {
+		log.Println(err.Error())
+		return false
+	}
+	return true
 }

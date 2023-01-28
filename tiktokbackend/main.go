@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+	"tiktokbackend/router"
 	"tiktokbackend/utils"
 )
 
@@ -16,7 +17,8 @@ func main() {
 	}
 
 	engine := gin.Default()
-	engine.Use(Cors()) //设置跨域
+	router.InitRouter(engine)
+	engine.Use(Cors()) // 设置跨域
 	engine.Run(cfg.EngineHost + ":" + cfg.EnginePort)
 }
 
