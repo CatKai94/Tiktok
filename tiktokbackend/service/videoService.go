@@ -33,5 +33,5 @@ type VideoService interface {
 
 	// GetVideoIdList
 	// 通过一个作者id，返回该用户发布的视频id切片数组
-	GetVideoIdList(userId int64) ([]int64, error)
+	//GetVideoIdList(userId int64) ([]int64, error)
 }

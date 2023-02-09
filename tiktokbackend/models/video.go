@@ -13,7 +13,7 @@ type Video struct {
 	PlayUrl     string `json:"play_url"`
 	CoverUrl    string `json:"cover_url"`
 	PublishTime time.Time
-	Title       string `json:"title"` //视频名，5.23添加
+	Title       string `json:"title"`
 }
 
 // 表名映射

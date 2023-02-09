@@ -17,8 +17,14 @@ func main() {
 	}
 
 	engine := gin.Default()
+
+	// 初始化路由
 	router.InitRouter(engine)
-	engine.Use(Cors()) // 设置跨域
+
+	// 设置跨域
+	engine.Use(Cors())
+
+	// 运行web服务
 	engine.Run(cfg.EngineHost + ":" + cfg.EnginePort)
 }
 

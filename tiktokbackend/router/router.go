@@ -25,9 +25,9 @@ func InitRouter(r *gin.Engine) {
 	//用户信息
 	apiRouter.GET("/user/", controller.UserInfo)
 	//视频投稿
-	apiRouter.POST("/publish/action/", nil)
+	apiRouter.POST("/publish/action/", controller.Publih)
 	//发布列表
-	apiRouter.GET("/publish/list/", nil)
+	apiRouter.GET("/publish/list/", controller.PublishList)
 
 	/*
 		互动接口

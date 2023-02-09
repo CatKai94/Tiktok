@@ -27,31 +27,55 @@ func (vsi *VideoServiceImpl) Feed(lastTime time.Time, userId int64) ([]FmtVideo,
 	}
 	log.Printf("方法models.GetVideosByLastTime(lastTime) 成功：%v", videos)
 	//将数据通过copyVideos进行处理，在拷贝的过程中对数据进行组装    // 2023年1.28注释，晚点再写，先用假数据
-	err = vsi.copyVideos(&videosList, &videos, userId)
-	//if err != nil {
-	//	log.Printf("方法videoService.copyVideos(&videos, &tableVideos, userId) 失败：%v", err)
-	//	return nil, time.Time{}, err
-	//}
-	//log.Printf("方法videoService.copyVideos(&videos, &tableVideos, userId) 成功")
-	//返回数据，同时获得视频中最早的时间返回
+	err = vsi.refactorVideos(&videosList, &videos, userId)
+
 	return videosList, videos[len(videos)-1].PublishTime, nil
 }
 
-// 该方法可以将数据进行拷贝和转换，并从其他方法获取对应的数据
-func (vsi *VideoServiceImpl) copyVideos(result *[]FmtVideo, data *[]models.Video, userId int64) error {
+func (vsi *VideoServiceImpl) Publish(fileName string, userId int64, title string) error {
+	//生成视频名称
 
+	videoName := fileName
+	imageName := fileName
+
+	err := models.Save(videoName, imageName, userId, title)
+
+	if err != nil {
+		log.Println("视频信息入库失败：", err)
+		return err
+	}
+
+	log.Println("视频信息入库成功")
+	return nil
+}
+
+func (vsi *VideoServiceImpl) List(userId int64, curId int64) ([]FmtVideo, error) {
+	videos, err := models.GetVideosByAuthorId(userId)
+
+	fmtVideoList := make([]FmtVideo, 0, len(videos))
+	err = vsi.refactorVideos(&fmtVideoList, &videos, curId)
+
+	if err != nil {
+		log.Println("格式化Videos时发生错误：", err)
+		return nil, err
+	}
+	return fmtVideoList, nil
+}
+
+// 将Video格式化为fmtVideo
+func (vsi *VideoServiceImpl) refactorVideos(result *[]FmtVideo, data *[]models.Video, userId int64) error {
 	//遍历查到的所有Video对象，将它们逐个包装成FmtVideo对象
 	for _, temp := range *data {
 		var fmtVideo FmtVideo
 		//将fmtVideo进行组装，添加想要的信息,插入从数据库中查到的数据
-		vsi.creatVideo(&fmtVideo, &temp, userId)
+		vsi.creatFmtVideo(&fmtVideo, &temp, userId)
 		*result = append(*result, fmtVideo)
 	}
 	return nil
 }
 
 // 将fmtVideo进行组装，添加想要的信息,插入从数据库中查到的数据
-func (vsi *VideoServiceImpl) creatVideo(fmtVideo *FmtVideo, data *models.Video, userId int64) {
+func (vsi *VideoServiceImpl) creatFmtVideo(fmtVideo *FmtVideo, data *models.Video, userId int64) {
 	////建立协程组，当这一组的携程全部完成后，才会结束本方法
 	//var wg sync.WaitGroup
 	//wg.Add(4)
@@ -114,10 +138,24 @@ func (vsi *VideoServiceImpl) creatVideo(fmtVideo *FmtVideo, data *models.Video, 
 		TotalFavorite: 245,
 		FavoriteCount: 1756,
 	}
+
 	fmtVideo.Video = *data
 	fmtVideo.Author = fmtUser
 	fmtVideo.FavoriteCount = 40
 	fmtVideo.CommentCount = 345
 	fmtVideo.IsFavorite = false
+}
 
+// 通过视频视频id获得FmtVideo对象
+func (vsi *VideoServiceImpl) GetFmtVideo(videoId int64, userId int64) (FmtVideo, error) {
+	var fmtVideo FmtVideo
+
+	video, err := models.GetVideoByVideoId(videoId)
+	if err != nil {
+		log.Println("查询视频失败")
+		return fmtVideo, err
+	}
+
+	vsi.creatFmtVideo(&fmtVideo, &video, userId)
+	return fmtVideo, nil
 }
