@@ -8,7 +8,7 @@ import (
 func SaveFaceImage(fileName string) error {
 	inputFile := "./public/videos/" + fileName + ".mp4"
 	// 设置转码后文件路径
-	outputFile := "./public/images/" + fileName + ".mp4"
+	outputFile := "./public/images/" + fileName + ".jpg"
 
 	// 设置 ffmpeg 命令行参数
 	// ffmpeg -i input_file -y -f image2 -t 0.001 -s 352x240 output.jpg
