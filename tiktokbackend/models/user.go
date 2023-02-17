@@ -5,7 +5,7 @@ import "log"
 // 映射字段名
 type User struct {
 	Id       int64
-	Username string
+	Username string `gorm:"column:name"`
 	Password string
 }
 
@@ -36,7 +36,7 @@ func GetUserList() ([]User, error) {
 // GetUserByUsername 根据username获得User对象
 func GetUserByUsername(name string) (User, error) {
 	user := User{}
-	if err := DB.Where("username = ?", name).First(&user).Error; err != nil {
+	if err := DB.Where("name = ?", name).First(&user).Error; err != nil {
 		log.Println(err.Error())
 		return user, err
 	}

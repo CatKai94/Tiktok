@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -29,6 +28,7 @@ type UserResponse struct {
 // douyin/user/register/ POST
 // 用户注册
 func Register(c *gin.Context) {
+	//jl
 	username := c.Query("username")
 	password := c.Query("password")
 
@@ -46,7 +46,7 @@ func Register(c *gin.Context) {
 			Password: service.EnCoder(password),
 		}
 		if usi.InsertUser(&newUser) != true {
-			println("Insert Data Fail")
+			log.Println("Insert Data Fail")
 		}
 		u := usi.GetUserByUsername(username)
 		token := service.GenerateToken(username)
@@ -62,30 +62,36 @@ func Register(c *gin.Context) {
 // Login POST /douyin/user/login/
 // 用户登录
 func Login(c *gin.Context) {
+	//jl
 	username := c.Query("username")
 	password := c.Query("password")
 	encoderPassword := service.EnCoder(password)
-	println("encoderPassword: ", encoderPassword)
-
+	//println("encoderPassword: ", encoderPassword)
 	usi := service.UserServiceImpl{}
-
 	u := usi.GetUserByUsername(username)
-
-	if encoderPassword == u.Password {
-		fmt.Println("密码相同")
-		token := service.GenerateToken(username)
-		fmt.Println("成功生成jwt令牌")
+	if username != u.Username {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   u.Id,
-			Token:    token,
+			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist..."},
 		})
-		fmt.Println("成功发送消息")
 	} else {
-		fmt.Println("密码不同")
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "Username or Password Error"},
-		})
+		if encoderPassword == u.Password {
+			//fmt.Println("密码相同")
+			token := service.GenerateToken(username)
+			//fmt.Println("成功生成jwt令牌")
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{StatusCode: 0},
+				UserId:   u.Id,
+				Token:    token,
+			})
+			//fmt.Println("成功发送消息")
+		} else {
+			c.JSON(http.StatusOK, UserLoginResponse{
+				Response: Response{
+					StatusCode: 1,
+					StatusMsg:  "Password Error",
+				},
+			})
+		}
 	}
 }
 

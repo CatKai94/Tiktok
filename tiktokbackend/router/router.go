@@ -11,7 +11,7 @@ func InitRouter(r *gin.Engine) {
 
 	apiRouter := r.Group("/douyin")
 
-	apiRouter.GET("/test", controller.Test)
+	//apiRouter.GET("/test", controller.Test)
 
 	/*
 		基础接口
