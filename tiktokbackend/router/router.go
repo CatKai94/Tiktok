@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"tiktokbackend/controller"
+	"tiktokbackend/utils"
 )
 
 func InitRouter(r *gin.Engine) {
@@ -49,11 +50,11 @@ func InitRouter(r *gin.Engine) {
 	//用户关注列表
 	apiRouter.GET("/relation/follow/list/", nil)
 	//用户粉丝列表
-	apiRouter.GET("/relation/follower/list/", nil)
+	apiRouter.GET("/relation/follower/list/", controller.FollowerList)
 	//用户好友列表
-	apiRouter.GET("relation/friend/list/", nil)
+	apiRouter.GET("relation/friend/list/", controller.FriendList)
 	//消息操作
-	apiRouter.POST("/message/chat/", nil)
+	apiRouter.GET("/message/chat/", utils.Auth(), controller.MessageChat)
 	//聊天记录
-	apiRouter.GET("/message/action/", nil)
+	apiRouter.POST("/message/action/", utils.Auth(), controller.MessageAction)
 }
