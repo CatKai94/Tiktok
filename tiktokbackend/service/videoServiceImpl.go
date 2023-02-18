@@ -130,13 +130,17 @@ func (vsi *VideoServiceImpl) creatFmtVideo(fmtVideo *FmtVideo, data *models.Vide
 
 	//这里我手写了一些假数据
 	fmtUser := FmtUser{
-		Id:            2,
-		Name:          "辛弃疾",
-		FollowCount:   17,
-		FollowerCount: 32,
-		IsFollow:      false,
-		TotalFavorite: 245,
-		FavoriteCount: 1756,
+		Id:              2,
+		Name:            "辛弃疾",
+		FollowCount:     17,
+		FollowerCount:   32,
+		IsFollow:        false,
+		Avatar:          config.DefaultAvatar,
+		BackgroundImage: config.DefaultBGI,
+		Signature:       config.DefaultSign,
+		TotalFavorite:   245,
+		WorkCount:       66,
+		FavoriteCount:   1756,
 	}
 
 	fmtVideo.Video = *data

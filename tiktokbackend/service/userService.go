@@ -25,11 +25,15 @@ type UserService interface {
 
 // FmtUser 最终封装后,controller返回的FmtUser结构体
 type FmtUser struct {
-	Id            int64  `json:"id,omitempty"`
-	Name          string `json:"name,omitempty"`
-	FollowCount   int64  `json:"follow_count"`
-	FollowerCount int64  `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
-	TotalFavorite int64  `json:"total_favorite,omitempty"`
-	FavoriteCount int64  `json:"favorite_count,omitempty"`
+	Id              int64  `json:"id,omitempty"`
+	Name            string `json:"name,omitempty"`
+	FollowCount     int64  `json:"follow_count"`
+	FollowerCount   int64  `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar,omitempty"`
+	BackgroundImage string `json:"background_image,omitempty"`
+	Signature       string `json:"signature,omitempty"`
+	TotalFavorite   int64  `json:"total_favorite,omitempty"`
+	WorkCount       int64  `json:"work_count,omitempty"`
+	FavoriteCount   int64  `json:"favorite_count,omitempty"`
 }

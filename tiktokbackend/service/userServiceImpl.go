@@ -154,14 +154,12 @@ func GenerateToken(username string) string {
 	return token
 }
 
-// NewToken 根据信息创建token
-func NewToken(u models.User) string {
+// NewToken 根据用户信息创建token
+func NewToken(user models.User) string {
 	expiresTime := time.Now().Unix() + 60*60*24
-	fmt.Printf("expiresTime: %v\n", expiresTime)
-	id64 := u.Id
-	fmt.Printf("id: %v\n", strconv.FormatInt(id64, 10))
+	id64 := user.Id
 	claims := jwt.StandardClaims{
-		Audience:  u.Username,
+		Audience:  user.Username,
 		ExpiresAt: expiresTime,
 		Id:        strconv.FormatInt(id64, 10),
 		IssuedAt:  time.Now().Unix(),

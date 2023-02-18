@@ -5,11 +5,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+	"tiktokbackend/middleware/redis"
 	"tiktokbackend/router"
 	"tiktokbackend/utils"
 )
 
 func main() {
+
+	// 初始化redis数据库
+	redis.InitRedis()
+
 	// 解析配置文件
 	cfg, err := utils.ParseConfig("./config/engineConfig.json")
 	if err != nil {
