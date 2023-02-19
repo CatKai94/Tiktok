@@ -33,9 +33,9 @@ func InitRouter(r *gin.Engine) {
 		互动接口
 	*/
 	//赞操作
-	apiRouter.POST("/favorite/action/", nil)
+	apiRouter.POST("/favorite/action/", controller.LikeAction)
 	//喜欢列表
-	apiRouter.GET("/favorite/list/", nil)
+	apiRouter.GET("/favorite/list/", controller.GetLikeVideoList)
 	//评论操作
 	apiRouter.POST("/comment/action/", nil)
 	//视频评论列表
