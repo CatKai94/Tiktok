@@ -11,8 +11,6 @@ import (
 )
 
 type LikeServiceImpl struct {
-	VideoService
-	UserService
 }
 
 //redis有两个库
@@ -23,10 +21,10 @@ type LikeServiceImpl struct {
 func (likeService *LikeServiceImpl) JudgeUserIsLike(userId int64, videoId int64) (bool, error) {
 	strUserId := strconv.FormatInt(userId, 10)
 	strVideoId := strconv.FormatInt(videoId, 10)
-	//查询RdbUserToVideo库,key为strUserId的set中是否存在videoId
+
+	//查询RdbUserToVideo库,key为strUserId的set中是否存在
 	count, err := redis.RdbUserToVideo.Exists(redis.Ctx, strUserId).Result()
-	if count > 0 {
-		//err不为空，存在问题，redis查询失败
+	if count > 0 { //RdbUserToVideo库, 存在key为strUserId的set
 		if err != nil {
 			log.Println("方法JudgeUserIsLike RdbUserToVideo query key失败:", err)
 			return false, err
@@ -37,10 +35,9 @@ func (likeService *LikeServiceImpl) JudgeUserIsLike(userId int64, videoId int64)
 			log.Println("方法JudgeUserIsLike RdbUserToVideo query value失败:", err1)
 			return false, err1
 		}
-		log.Println("方法JudgeUserIsLike RdbUserToVideo query value成功")
+
 		return result, nil
-	} else {
-		//RdbUserToVideo不存在key为userId，则再查询RdbVideoToUser
+	} else { // RdbUserToVideo不存在key为userId，则再查询RdbVideoToUser
 		count, err := redis.RdbVideoToUser.Exists(redis.Ctx, strVideoId).Result()
 		if count > 0 {
 			//err不为空，查询失败
@@ -56,8 +53,7 @@ func (likeService *LikeServiceImpl) JudgeUserIsLike(userId int64, videoId int64)
 			}
 			log.Println("方法JudgeUserIsLike RdbVideoToUser query value成功")
 			return result, nil
-		} else {
-			//两个redis库中都没有对应的key
+		} else { //两个redis库中都没有对应的key
 			//给优先查询的RdbUserToVideo库中加入key:setUserId,value:-1
 			_, err := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, -1).Result()
 			if err != nil {
@@ -149,7 +145,7 @@ func (likeService *LikeServiceImpl) GetUserTotalIsLikedCount(userId int64) (int6
 	//调用model.video中的方法
 	videoIdList, err := models.GetVideoIdsByAuthorId(userId)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println("方法GetUserTotalIsLikedCount发生了错误： ", err.Error())
 		return 0, err
 	}
 	var result int64
@@ -158,17 +154,17 @@ func (likeService *LikeServiceImpl) GetUserTotalIsLikedCount(userId int64) (int6
 	var wg sync.WaitGroup
 	wg.Add(i)
 	for j := 0; j < i; j++ {
-		go func() {
+		go func(pos int) {
 			defer wg.Done()
 			//调用GetLikeCount:根据videoId,获取点赞数
-			count, err := likeService.GetLikeCount(videoIdList[j])
+			count, err := likeService.GetLikeCount(videoIdList[pos])
 			if err != nil {
 				//如果有错误，输出错误信息，并不加入该视频点赞数
 				log.Printf(err.Error())
 				return
 			}
 			*videoLikeCountList = append(*videoLikeCountList, count)
-		}()
+		}(j)
 	}
 	wg.Wait()
 	for _, count := range *videoLikeCountList {
@@ -181,7 +177,7 @@ func (likeService *LikeServiceImpl) GetUserTotalIsLikedCount(userId int64) (int6
 func (likeService *LikeServiceImpl) GetLikeVideoCount(userId int64) (int64, error) {
 	strUserId := strconv.FormatInt(userId, 10)
 	n, err := redis.RdbUserToVideo.Exists(redis.Ctx, strUserId).Result()
-	if n > 0 {
+	if n > 0 { // RdbUserToVideo
 		if err != nil {
 			log.Println("方法GetLikeVideoCount redis查询key失败")
 			return 0, err
@@ -192,7 +188,8 @@ func (likeService *LikeServiceImpl) GetLikeVideoCount(userId int64) (int64, erro
 			return 0, err1
 		}
 		log.Println("方法GetLikeVideoCount redis查询key成功")
-		return result, nil
+		// 减去默认值-1
+		return result - 1, nil
 	} else {
 		//RdbUserToVideo中没有对应的Key
 		if _, err := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, -1).Result(); err != nil {
@@ -489,8 +486,12 @@ func (likeService *LikeServiceImpl) LikeAction(userId int64, videoId int64, acti
 
 func (likeService *LikeServiceImpl) GetLikeVideoList(userId int64, curId int64) ([]FmtVideo, error) {
 	strUserId := strconv.FormatInt(userId, 10)
-	var videoIdList []int64
-	if n, err := redis.RdbUserToVideo.Exists(redis.Ctx, strUserId).Result(); n > 0 {
+	// var videoIdList []int64
+	// var ss = make([]int, n)
+	var videoIdList = make([]int64, 0)
+	n, err := redis.RdbUserToVideo.Exists(redis.Ctx, strUserId).Result()
+	if n > 0 {
+		log.Println("到这里了111")
 		if err != nil {
 			log.Println("方法GetLikeVideoList redis查询key失败")
 			return nil, err
@@ -498,60 +499,72 @@ func (likeService *LikeServiceImpl) GetLikeVideoList(userId int64, curId int64) 
 		strVideoIdList, err1 := redis.RdbUserToVideo.SMembers(redis.Ctx, strUserId).Result()
 		for _, strVideoId := range strVideoIdList {
 			videoId, _ := strconv.ParseInt(strVideoId, 10, 64)
-			videoIdList = append(videoIdList, videoId, 10, 64)
+			videoIdList = append(videoIdList, videoId)
+			log.Println("502行  videoIdList: ", videoIdList)
 		}
 		if err1 != nil {
 			log.Println("方法GetLikeVideoList redis查询value失败")
-		} else {
-			//key不存在
-			if _, err := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, -1).Result(); err != nil {
-				log.Println("方法GetLikeVideoList redis添加默认值失败")
-				redis.RdbUserToVideo.Del(redis.Ctx, strUserId)
-				return nil, err
-			}
-			_, err := redis.RdbUserToVideo.Expire(redis.Ctx, strUserId, time.Duration(259200)*time.Second).Result()
-			if err != nil {
-				log.Println("方法GetLikeVideoList redis设置有效期失败")
-				redis.RdbUserToVideo.Del(redis.Ctx, strUserId)
-				return nil, err
-			}
-			//查询mysql
-			videoIdList, err1 := models.GetVideoIdList(userId)
-			if err1 != nil {
-				log.Println(err1.Error())
-				return nil, err1
-			}
-			//维护redis
-			for _, videIdResult := range videoIdList {
-				if _, err2 := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, videIdResult).Result(); err2 != nil {
-					log.Println("方法GetLikeVideoList 维护redis失败")
-					return nil, err2
-				}
+		}
+	} else {
+
+		log.Println("到这里了222")
+		//key不存在
+		if _, err := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, -1).Result(); err != nil {
+			log.Println("方法GetLikeVideoList redis添加默认值失败")
+			redis.RdbUserToVideo.Del(redis.Ctx, strUserId)
+			return nil, err
+		}
+		_, err := redis.RdbUserToVideo.Expire(redis.Ctx, strUserId, time.Duration(259200)*time.Second).Result()
+		if err != nil {
+			log.Println("方法GetLikeVideoList redis设置有效期失败")
+			redis.RdbUserToVideo.Del(redis.Ctx, strUserId)
+			return nil, err
+		}
+		//查询mysql
+		videoIdList, err1 := models.GetVideoIdList(userId)
+		if err1 != nil {
+			log.Println(err1.Error())
+			return nil, err1
+		}
+		//维护redis
+		for _, videIdResult := range videoIdList {
+			if _, err2 := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, videIdResult).Result(); err2 != nil {
+				log.Println("方法GetLikeVideoList 维护redis失败")
+				return nil, err2
 			}
 		}
 	}
+
 	likeVideoList := new([]FmtVideo)
 	i := len(videoIdList) - 1
+	log.Println("537行  len videoIdList", i+1)
+
 	if i == 0 {
 		return *likeVideoList, nil
 	}
 
+	var videoService VideoServiceImpl
+	// 创建协程计数器
 	var wg sync.WaitGroup
 	wg.Add(i)
 	for j := 0; j <= i; j++ {
 		if videoIdList[j] == -1 {
 			continue
 		}
-		go func() {
+		log.Println("创建协程: ", j)
+		go func(pos int) {
 			defer wg.Done()
-			video, err := likeService.GetVideo(videoIdList[j], curId)
+			fmtVideo, err := videoService.GetVideo(videoIdList[pos], curId)
+
+			log.Println("video: ", fmtVideo)
 			if err != nil {
 				log.Println(errors.New("该喜欢的视频丢失"))
 				return
 			}
-			*likeVideoList = append(*likeVideoList, video)
-		}()
+			*likeVideoList = append(*likeVideoList, fmtVideo)
+		}(j)
 	}
 	wg.Wait()
+
 	return *likeVideoList, nil
 }

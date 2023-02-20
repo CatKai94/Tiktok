@@ -33,7 +33,7 @@ type FmtUser struct {
 	Avatar          string `json:"avatar,omitempty"`
 	BackgroundImage string `json:"background_image,omitempty"`
 	Signature       string `json:"signature,omitempty"`
-	TotalFavorite   int64  `json:"total_favorite,omitempty"`
+	TotalFavorited  int64  `json:"total_favorited,omitempty"`
 	WorkCount       int64  `json:"work_count,omitempty"`
 	FavoriteCount   int64  `json:"favorite_count,omitempty"`
 }

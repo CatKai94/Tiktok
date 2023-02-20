@@ -60,13 +60,13 @@ func (usi *UserServiceImpl) InsertUser(user *models.User) bool {
 // GetFmtUserById 未登录情况下,根据user_id获得User对象
 func (usi *UserServiceImpl) GetFmtUserById(id int64) (FmtUser, error) {
 	fmtUser := FmtUser{
-		Id:            0,
-		Name:          "",
-		FollowCount:   0,
-		FollowerCount: 0,
-		IsFollow:      false,
-		TotalFavorite: 0,
-		FavoriteCount: 0,
+		Id:             0,
+		Name:           "",
+		FollowCount:    0,
+		FollowerCount:  0,
+		IsFollow:       false,
+		TotalFavorited: 0,
+		FavoriteCount:  0,
 	}
 	//user, err := models.GetUserById(id)
 	//if err != nil {
@@ -100,48 +100,54 @@ func (usi *UserServiceImpl) GetFmtUserById(id int64) (FmtUser, error) {
 
 // GetFmtUserByIdWithCurId 已登录(curID)情况下,根据user_id获得User对象
 func (usi *UserServiceImpl) GetFmtUserByIdWithCurId(id int64, curId int64) (FmtUser, error) {
+	var likeService LikeServiceImpl
+
 	fmtUser := FmtUser{
-		Id:            0,
-		Name:          "",
-		FollowCount:   0,
-		FollowerCount: 0,
-		IsFollow:      false,
-		TotalFavorite: 0,
-		FavoriteCount: 0,
+		Id:              0,
+		Name:            "",
+		FollowCount:     0,
+		FollowerCount:   0,
+		IsFollow:        false,
+		TotalFavorited:  0,
+		FavoriteCount:   0,
+		Avatar:          config.DefaultAvatar,
+		BackgroundImage: config.DefaultBGI,
+		Signature:       config.DefaultSign,
 	}
 
-	//user, err := models.GetUserById(id)
-	//if err != nil {
-	//	log.Println("Err:", err.Error())
-	//	log.Println("User Not Found")
-	//	return fmtUser, err
-	//}
-	//
-	//log.Println("Query User Success")
+	user, err := models.GetUserById(id)
+	if err != nil {
+		log.Println("产生错误:", err.Error())
+		log.Println("没有查到用户id为", id, "的用户")
+		return fmtUser, err
+	}
+	fmtUser.Name = user.Username
+	fmtUser.Id = user.Id
+
+	// 获取关注的人数
 	//followCount, err := usi.GetFollowingCnt(id)
 	//if err != nil {
 	//	log.Println("Err:", err.Error())
 	//}
+
+	// 获取粉丝的人数
 	//followerCount, err := usi.GetFollowerCnt(id)
 	//if err != nil {
 	//	log.Println("Err:", err.Error())
 	//}
+
+	// 判断是否关注了该用户
 	//isfollow, err := usi.IsFollowing(curId, id)
 	//if err != nil {
 	//	log.Println("Err:", err.Error())
 	//}
-	//u := GetLikeService() //解决循环依赖
-	//totalFavorited, _ := u.TotalFavourite(id)
-	//favoritedCount, _ := u.FavouriteVideoCount(id)
-	//fmtUser = FmtUser{
-	//	Id:            id,
-	//	Name:          user.Username,
-	//	FollowCount:   followCount,
-	//	FollowerCount: followerCount,
-	//	IsFollow:      isfollow,
-	//	TotalFavorite: totalFavorited,
-	//	FavoriteCount: favoritedCount,
-	//}
+
+	// 获取用户获得的点赞总数和获赞总数
+	favoriteCount, _ := likeService.GetLikeVideoCount(id)         // 点赞
+	totalFavorited, _ := likeService.GetUserTotalIsLikedCount(id) //被点赞
+	fmtUser.TotalFavorited = totalFavorited
+	fmtUser.FavoriteCount = favoriteCount
+
 	return fmtUser, nil
 }
 

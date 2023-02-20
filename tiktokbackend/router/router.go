@@ -32,9 +32,9 @@ func InitRouter(r *gin.Engine) {
 		互动接口
 	*/
 	//赞操作
-	apiRouter.POST("/favorite/action/", utils.Auth(), nil)
+	apiRouter.POST("/favorite/action/", utils.Auth(), controller.LikeAction)
 	//喜欢列表
-	apiRouter.GET("/favorite/list/", utils.Auth(), nil)
+	apiRouter.GET("/favorite/list/", utils.Auth(), controller.GetLikeVideoList)
 	//评论操作
 	apiRouter.POST("/comment/action/", utils.Auth(), nil)
 	//视频评论列表
@@ -44,13 +44,13 @@ func InitRouter(r *gin.Engine) {
 		社交接口
 	*/
 	//关系操作
-	apiRouter.POST("/relation/action/", utils.Auth(), nil)
+	apiRouter.POST("/relation/action/", utils.Auth(), controller.RelationAction)
 	//用户关注列表
-	apiRouter.GET("/relation/follow/list/", utils.Auth(), nil)
+	apiRouter.GET("/relation/follow/list/", utils.Auth(), controller.GetFollowingList)
 	//用户粉丝列表
-	apiRouter.GET("/relation/follower/list/", utils.Auth(), nil)
+	apiRouter.GET("/relation/follower/list/", utils.Auth(), controller.GetFollowerList)
 	//用户好友列表
-	apiRouter.GET("relation/friend/list/", utils.Auth(), nil)
+	apiRouter.GET("relation/friend/list/", utils.Auth(), controller.GetFriendList)
 	//消息操作
 	apiRouter.POST("/message/chat/", utils.Auth(), nil)
 	//聊天记录

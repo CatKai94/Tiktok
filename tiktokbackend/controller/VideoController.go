@@ -61,6 +61,8 @@ func Feed(c *gin.Context) {
 // Publish /publish/action/
 func Publih(c *gin.Context) {
 	userId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
+	log.Println("发布视频的用户id为", userId)
+
 	title := c.PostForm("title")
 	file, err := c.FormFile("data")
 
