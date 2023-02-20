@@ -1,0 +1,6 @@
+{
+  "engine_name": "backend",
+  "engine_mode": "debug",
+  "engine_host": "localhost",
+  "engine_port": "3000"
+}
