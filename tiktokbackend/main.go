@@ -14,6 +14,8 @@ func main() {
 
 	// 初始化redis数据库
 	redis.InitRedis()
+	// 初始化敏感词拦截器。
+	utils.InitFilter()
 
 	// 解析配置文件
 	cfg, err := utils.ParseConfig("./config/engineConfig.json")

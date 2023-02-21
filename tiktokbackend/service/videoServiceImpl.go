@@ -19,17 +19,15 @@ func (vsi *VideoServiceImpl) Feed(lastTime time.Time, userId int64) ([]FmtVideo,
 	//创建对应返回视频的切片数组，提前将切片的容量设置好，可以减少切片扩容的性能
 	videosList := make([]FmtVideo, 0, config.VideoCount)
 
-	log.Println("进入feed流")
-
 	//根据传入的时间，获得传入时间前n个视频，可以通过config.videoCount来控制
 	videos, err := models.GetVideosByLastTime(lastTime)
-	log.Println("service层的videos: ", videos[0])
+
 	if err != nil {
-		log.Printf("方法models.GetVideosByLastTime(lastTime) 失败：%v", err)
+		log.Println("方法Feed获取按时间排序的视频失败: ", err)
 		return nil, time.Time{}, err
 	}
-	log.Printf("方法models.GetVideosByLastTime(lastTime) 成功：%v", videos)
-	//将数据通过copyVideos进行处理，在拷贝的过程中对数据进行组装    // 2023年1.28注释，晚点再写，先用假数据
+
+	//将models层内的video加工成FmtVideo
 	err = vsi.refactorVideos(&videosList, &videos, userId)
 
 	return videosList, videos[len(videos)-1].PublishTime, nil
@@ -46,8 +44,6 @@ func (vsi *VideoServiceImpl) GetVideo(videoId int64, userId int64) (FmtVideo, er
 	if err != nil {
 		log.Printf("方法dao.GetVideoByVideoId(videoId) 失败：%v", err)
 		return fmtVideo, err
-	} else {
-		log.Printf("方法dao.GetVideoByVideoId(videoId) 成功")
 	}
 
 	//插入从数据库中查到的数据
@@ -102,10 +98,11 @@ func (vsi *VideoServiceImpl) creatFmtVideo(fmtVideo *FmtVideo, video *models.Vid
 
 	var likeService LikeServiceImpl
 	var userService UserServiceImpl
+	var commentService CommentServiceImpl
 
 	//创建协程组
 	var wg sync.WaitGroup
-	wg.Add(3) // 加上评论后再改成4
+	wg.Add(4) // 加上评论后再改成4
 	var err error
 
 	fmtVideo.Video = *video
@@ -144,39 +141,18 @@ func (vsi *VideoServiceImpl) creatFmtVideo(fmtVideo *FmtVideo, video *models.Vid
 		wg.Done()
 	}()
 
-	////获取该视频的评论总数
-	//go func() {
-	//	fmtVideo.CommentCount, err = vsi.CountFromVideoId(data.Id)
-	//	if err != nil {
-	//		log.Printf("方法videoService.CountFromVideoId(data.ID) 失败：%v", err)
-	//	} else {
-	//		log.Printf("方法videoService.CountFromVideoId(data.ID) 成功")
-	//	}
-	//	wg.Done()
-	//}()
-	//
-	wg.Wait()
+	//获取该视频的评论总数
+	go func() {
+		fmtVideo.CommentCount, err = commentService.CountFromVideoId(video.Id)
+		if err != nil {
+			log.Printf("方法videoService.CountFromVideoId(data.ID) 失败：%v", err)
+		} else {
+			log.Printf("方法videoService.CountFromVideoId(data.ID) 成功")
+		}
+		wg.Done()
+	}()
 
-	//这里我手写了一些假数据
-	//fmtUser := FmtUser{
-	//	Id:              2,
-	//	Name:            "辛弃疾",
-	//	FollowCount:     17,
-	//	FollowerCount:   32,
-	//	IsFollow:        false,
-	//	Avatar:          config.DefaultAvatar,
-	//	BackgroundImage: config.DefaultBGI,
-	//	Signature:       config.DefaultSign,
-	//	TotalFavorite:   245,
-	//	WorkCount:       66,
-	//	FavoriteCount:   1756,
-	//}
-	//
-	//fmtVideo.Video = *data
-	//fmtVideo.Author = fmtUser
-	//fmtVideo.FavoriteCount = 40
-	fmtVideo.CommentCount = 345
-	//fmtVideo.IsFavorite = false
+	wg.Wait()
 }
 
 // GetFmtVideo 通过视频id获得FmtVideo对象
@@ -191,4 +167,13 @@ func (vsi *VideoServiceImpl) GetFmtVideo(videoId int64, userId int64) (FmtVideo,
 
 	vsi.creatFmtVideo(&fmtVideo, &video, userId)
 	return fmtVideo, nil
+}
+
+func (vsi *VideoServiceImpl) GetVideoCntByUserId(userId int64) int64 {
+	ids, err := models.GetVideosByAuthorId(userId)
+	if err != nil {
+		log.Println("发生了错误, ", err)
+	}
+
+	return int64(len(ids))
 }

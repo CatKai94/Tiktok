@@ -491,7 +491,6 @@ func (likeService *LikeServiceImpl) GetLikeVideoList(userId int64, curId int64) 
 	var videoIdList = make([]int64, 0)
 	n, err := redis.RdbUserToVideo.Exists(redis.Ctx, strUserId).Result()
 	if n > 0 {
-		log.Println("到这里了111")
 		if err != nil {
 			log.Println("方法GetLikeVideoList redis查询key失败")
 			return nil, err
@@ -500,14 +499,11 @@ func (likeService *LikeServiceImpl) GetLikeVideoList(userId int64, curId int64) 
 		for _, strVideoId := range strVideoIdList {
 			videoId, _ := strconv.ParseInt(strVideoId, 10, 64)
 			videoIdList = append(videoIdList, videoId)
-			log.Println("502行  videoIdList: ", videoIdList)
 		}
 		if err1 != nil {
 			log.Println("方法GetLikeVideoList redis查询value失败")
 		}
 	} else {
-
-		log.Println("到这里了222")
 		//key不存在
 		if _, err := redis.RdbUserToVideo.SAdd(redis.Ctx, strUserId, -1).Result(); err != nil {
 			log.Println("方法GetLikeVideoList redis添加默认值失败")
@@ -537,7 +533,6 @@ func (likeService *LikeServiceImpl) GetLikeVideoList(userId int64, curId int64) 
 
 	likeVideoList := new([]FmtVideo)
 	i := len(videoIdList) - 1
-	log.Println("537行  len videoIdList", i+1)
 
 	if i == 0 {
 		return *likeVideoList, nil
@@ -551,7 +546,7 @@ func (likeService *LikeServiceImpl) GetLikeVideoList(userId int64, curId int64) 
 		if videoIdList[j] == -1 {
 			continue
 		}
-		log.Println("创建协程: ", j)
+
 		go func(pos int) {
 			defer wg.Done()
 			fmtVideo, err := videoService.GetVideo(videoIdList[pos], curId)

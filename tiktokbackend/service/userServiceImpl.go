@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"strconv"
@@ -101,6 +100,8 @@ func (usi *UserServiceImpl) GetFmtUserById(id int64) (FmtUser, error) {
 // GetFmtUserByIdWithCurId 已登录(curID)情况下,根据user_id获得User对象
 func (usi *UserServiceImpl) GetFmtUserByIdWithCurId(id int64, curId int64) (FmtUser, error) {
 	var likeService LikeServiceImpl
+	var followService FollowServiceImp
+	var videoService VideoServiceImpl
 
 	fmtUser := FmtUser{
 		Id:              0,
@@ -108,11 +109,13 @@ func (usi *UserServiceImpl) GetFmtUserByIdWithCurId(id int64, curId int64) (FmtU
 		FollowCount:     0,
 		FollowerCount:   0,
 		IsFollow:        false,
-		TotalFavorited:  0,
-		FavoriteCount:   0,
 		Avatar:          config.DefaultAvatar,
 		BackgroundImage: config.DefaultBGI,
 		Signature:       config.DefaultSign,
+		TotalFavorited:  0, // 获赞数量
+		WorkCount:       0, // 作品数量
+		FavoriteCount:   0, // 点赞数量
+
 	}
 
 	user, err := models.GetUserById(id)
@@ -125,26 +128,24 @@ func (usi *UserServiceImpl) GetFmtUserByIdWithCurId(id int64, curId int64) (FmtU
 	fmtUser.Id = user.Id
 
 	// 获取关注的人数
-	//followCount, err := usi.GetFollowingCnt(id)
-	//if err != nil {
-	//	log.Println("Err:", err.Error())
-	//}
+	followCount := followService.GetTotalFollowingsCnt(id)
+	fmtUser.FollowCount = followCount
 
 	// 获取粉丝的人数
-	//followerCount, err := usi.GetFollowerCnt(id)
-	//if err != nil {
-	//	log.Println("Err:", err.Error())
-	//}
+	followerCount := followService.GetTotalFollowersCnt(id)
+	fmtUser.FollowerCount = followerCount
 
 	// 判断是否关注了该用户
-	//isfollow, err := usi.IsFollowing(curId, id)
-	//if err != nil {
-	//	log.Println("Err:", err.Error())
-	//}
+	isFollow, err := followService.IsFollowing(id, curId)
+	fmtUser.IsFollow = isFollow
+
+	// 获取作品数量
+	workCount := videoService.GetVideoCntByUserId(id)
+	fmtUser.WorkCount = workCount
 
 	// 获取用户获得的点赞总数和获赞总数
 	favoriteCount, _ := likeService.GetLikeVideoCount(id)         // 点赞
-	totalFavorited, _ := likeService.GetUserTotalIsLikedCount(id) //被点赞
+	totalFavorited, _ := likeService.GetUserTotalIsLikedCount(id) // 被点赞
 	fmtUser.TotalFavorited = totalFavorited
 	fmtUser.FavoriteCount = favoriteCount
 
@@ -154,7 +155,6 @@ func (usi *UserServiceImpl) GetFmtUserByIdWithCurId(id int64, curId int64) (FmtU
 // GenerateToken 根据username生成一个token
 func GenerateToken(username string) string {
 	u := UserService.GetUserByUsername(new(UserServiceImpl), username)
-	fmt.Printf("generatetoken: %v\n", u)
 	token := NewToken(u)
 	println(token)
 	return token
@@ -189,6 +189,5 @@ func NewToken(user models.User) string {
 func EnCoder(password string) string {
 	h := hmac.New(sha256.New, []byte(password))
 	sha := hex.EncodeToString(h.Sum(nil))
-	fmt.Println("Result: " + sha)
 	return sha
 }

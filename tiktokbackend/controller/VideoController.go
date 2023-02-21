@@ -141,15 +141,7 @@ func GetVideo() service.VideoServiceImpl {
 	var userService service.UserServiceImpl
 	//var followService service.FollowServiceImp
 	var videoService service.VideoServiceImpl
-	//var likeService service.LikeServiceImpl
-	//var commentService service.CommentServiceImpl
-	//userService.FollowService = &followService
-	//userService.LikeService = &likeService
-	//followService.UserService = &userService
-	//likeService.VideoService = &videoService
-	//commentService.UserService = &userService
-	//videoService.CommentService = &commentService
-	//videoService.LikeService = &likeService
+
 	videoService.UserService = &userService
 	return videoService
 }

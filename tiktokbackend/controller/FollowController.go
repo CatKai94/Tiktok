@@ -23,23 +23,26 @@ type FollowersResp struct {
 // RelationAction /relation/action/ - 关系操作
 // 登录用户对其他用户进行关注或取消关注。
 func RelationAction(c *gin.Context) {
-	userId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
+	curId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
 	toUserId, _ := strconv.ParseInt(c.Query("to_user_id"), 10, 64)
 	actionType, _ := strconv.ParseInt(c.Query("action_type"), 10, 64)
 
 	followService := new(service.FollowServiceImp)
-	var flag bool
+	var err error
+
 	if actionType == 1 {
-		flag, _ = followService.AddFollowRelation(toUserId, userId)
+		err = followService.FollowAction(toUserId, curId)
 	} else if actionType == 2 {
-		flag, _ = followService.DeleteFollowRelation(userId, toUserId)
+		err = followService.UnFollowAction(toUserId, curId)
 	}
 
-	if flag == false {
+	if err != nil {
+		log.Println("关注或取消关注操作发生错误：", err)
 		c.JSON(http.StatusOK, LikeActionResponse{
 			StatusCode: 1,
 			StatusMsg:  "点赞或取消赞失败",
 		})
+		return
 	}
 
 	log.Println("关注、取关成功。")
