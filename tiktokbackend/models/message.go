@@ -40,24 +40,19 @@ func SaveMessage(msg Message) error {
 // MessageChat 当前登录用户和其他指定用户的聊天记录
 func MessageChat(loginUserId int64, targetUserId int64) ([]Message, error) {
 	messages := make([]Message, 0, 5)
-	result := DB.Where(&Message{UserId: loginUserId, ReceiverId: targetUserId}).
-		Or(&Message{UserId: targetUserId, ReceiverId: loginUserId}).
+	result := DB.Where(&Message{UserId: targetUserId, ReceiverId: loginUserId}).Where("have_get = ?", 0).
 		Order("created_at asc").
 		Find(&messages)
 	if result.Error != nil {
 		log.Println("获取聊天记录失败！")
 		return nil, result.Error
 	}
+	DeleteMessage(loginUserId, targetUserId)
 	return messages, nil
 }
 
-// DeleteChat 查完就删除记录，防止轮询的重复显示，但就不满足friend list里最新消息的实现了
-func DeleteChat(loginUserId int64, targetUserId int64) {
-	result := DB.Delete(&Message{UserId: loginUserId, ReceiverId: targetUserId}).
-		Or(&Message{UserId: targetUserId, ReceiverId: loginUserId})
-	if result.Error != nil {
-		log.Println("删除记录失败！")
-	}
+func DeleteMessage(loginUserId int64, targetUserId int64) {
+	DB.Model(&Message{}).Where("user_id = ?", targetUserId).Where("receiver_id = ?", loginUserId).Update("have_get", 1)
 }
 
 // LatestMessage 返回 loginUserId 和 targetUserId 最近的一条聊天记录
@@ -67,7 +62,7 @@ func LatestMessage(loginUserId int64, targetUserId int64) (Message, error) {
 		Or(&Message{UserId: targetUserId, ReceiverId: loginUserId}).
 		Order("created_at desc").Limit(1).Take(&message)
 	if result.Error != nil {
-		log.Println("获取最近一条聊天记录失败！")
+		log.Println("DB latestMessage查找最新记录失败！")
 		return Message{}, result.Error
 	}
 	return message, nil

@@ -19,7 +19,7 @@ func (messageService *MessageServiceImpl) ActionMessage(fromUserId int64, toUser
 	return err
 }
 func (messageService *MessageServiceImpl) MessageChat(loginUserId int64, targetUserId int64) ([]Message, error) {
-	messages := make([]Message, 0, 5)
+	messages := make([]Message, 0, 6)
 	DbMessages, err := models.MessageChat(loginUserId, targetUserId)
 	if err != nil {
 		log.Println("MessageChat Service:", err)
@@ -38,8 +38,8 @@ func (messageService *MessageServiceImpl) getRespMessage(messages *[]Message, Db
 	for _, DbMessage := range *DbMessages {
 		var message Message
 		message.Id = DbMessage.Id
-		message.UserId = DbMessage.UserId
 		message.ReceiverId = DbMessage.ReceiverId
+		message.UserId = DbMessage.UserId
 		message.MsgContent = DbMessage.MsgContent
 		message.CreatedAt = DbMessage.CreatedAt
 		*messages = append(*messages, message)
@@ -48,18 +48,17 @@ func (messageService *MessageServiceImpl) getRespMessage(messages *[]Message, Db
 }
 
 func (messageService *MessageServiceImpl) LatestMessage(loginUserId int64, targetUserId int64) (LatestMessage, error) {
-	plainMessage, err := models.LatestMessage(loginUserId, targetUserId)
+	pMessage, err := models.LatestMessage(loginUserId, targetUserId)
 	if err != nil {
-		log.Println("LatestMessage Service:", err)
+		log.Println("models.LatestMessage", err)
 		return LatestMessage{}, err
 	}
 	var latestMessage LatestMessage
-	latestMessage.message = plainMessage.MsgContent
-	if plainMessage.UserId == loginUserId {
-		// 最新一条消息是当前登录用户发送的
+	latestMessage.message = pMessage.MsgContent
+	//0 => 当前请求用户接收的消息， 1 => 当前请求用户发送的消息
+	if pMessage.UserId == loginUserId {
 		latestMessage.msgType = 1
 	} else {
-		// 最新一条消息是当前好友发送的
 		latestMessage.msgType = 0
 	}
 	return latestMessage, nil

@@ -16,8 +16,8 @@ type User struct {
 //		IsFollow:      false,
 //	}
 var DemoUser = User{
-	Id:            20000,
-	Name:          "20000",
+	Id:            20050,
+	Name:          "20050",
 	FollowCount:   0,
 	FollowerCount: 0,
 	IsFollow:      false,
