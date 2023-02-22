@@ -370,17 +370,21 @@ func (fsi *FollowServiceImp) GetFollowingsList(userId int64) ([]FmtUser, error) 
 	if n > 0 { // 如果存在
 		// 获取该key所对应的所有value, 并拼装成followingsIdList
 		strFollowingsIdList, err1 := redis.RdbFollowings.SMembers(redis.Ctx, strUserId).Result()
+		log.Println("用户关注列表：", strFollowingsIdList)
 		for _, strFollowingId := range strFollowingsIdList {
 			followingId, _ := strconv.ParseInt(strFollowingId, 10, 64)
-			followingsIdList = append(followingsIdList, followingId)
+			log.Println("用户关注的用户id: ", followingId)
+			if followingId != userId { // 过滤掉自身
+				followingsIdList = append(followingsIdList, followingId)
+			}
 		}
 		if err1 != nil {
 			log.Println("方法getFollowingsList中redis查询RdbFollowings库的value值失败")
 		}
 	} else {
 		// key不存在
-		// 为key值设置默认值
-		if _, err := redis.RdbFollowings.SAdd(redis.Ctx, strUserId, -1).Result(); err != nil {
+		// 为key值设置默认值, 默认值为该用户的id
+		if _, err := redis.RdbFollowings.SAdd(redis.Ctx, strUserId, userId).Result(); err != nil {
 			log.Println("方法getFollowingsList中redis为RdbFollowings库的key值设置默认值失败")
 			redis.RdbFollowings.Del(redis.Ctx, strUserId)
 			return nil, err
@@ -411,21 +415,21 @@ func (fsi *FollowServiceImp) GetFollowingsList(userId int64) ([]FmtUser, error) 
 	followingsList := new([]FmtUser)
 
 	// 根据每个id来查询用户信息。
-	idListLen := len(followingsIdList) - 1
+	idListLen := len(followingsIdList)
 	if idListLen == 0 {
 		return *followingsList, nil
 	}
+
+	log.Println("用户关注的Id列表：", followingsIdList)
 
 	// 创建协程组
 	var wg sync.WaitGroup
 	wg.Add(idListLen)
 	for i := 0; i < idListLen; i++ {
-		if followingsIdList[i] == -1 {
-			continue
-		}
 		go func(pos int) {
 			defer wg.Done()
-			fmtUser, _ := userService.GetFmtUserByIdWithCurId(userId, followingsIdList[pos])
+			log.Println("当前被查的用户具体id是：", followingsIdList[pos])
+			fmtUser, _ := userService.GetFmtUserByIdWithCurId(followingsIdList[pos], userId)
 			log.Println("方法getFollowingsList输出fmtUser: ", fmtUser)
 			*followingsList = append(*followingsList, fmtUser)
 		}(i)
@@ -451,7 +455,9 @@ func (fsi *FollowServiceImp) GetFollowersList(userId int64) ([]FmtUser, error) {
 		strFollowersIdList, err1 := redis.RdbFollowers.SMembers(redis.Ctx, strUserId).Result()
 		for _, strFollowingId := range strFollowersIdList {
 			followerId, _ := strconv.ParseInt(strFollowingId, 10, 64)
-			followersIdList = append(followersIdList, followerId)
+			if followerId != userId {
+				followersIdList = append(followersIdList, followerId)
+			}
 		}
 		if err1 != nil {
 			log.Println("方法getFollowingsList中redis查询RdbFollowings库的value值失败")
@@ -490,7 +496,7 @@ func (fsi *FollowServiceImp) GetFollowersList(userId int64) ([]FmtUser, error) {
 	followersList := new([]FmtUser)
 
 	// 根据每个id来查询用户信息。
-	idListLen := len(followersIdList) - 1
+	idListLen := len(followersIdList)
 	if idListLen == 0 {
 		return *followersList, nil
 	}
@@ -504,7 +510,7 @@ func (fsi *FollowServiceImp) GetFollowersList(userId int64) ([]FmtUser, error) {
 		}
 		go func(pos int) {
 			defer wg.Done()
-			fmtUser, _ := userService.GetFmtUserByIdWithCurId(userId, followersIdList[pos])
+			fmtUser, _ := userService.GetFmtUserByIdWithCurId(followersIdList[pos], userId)
 			log.Println("方法getFollowingsList输出fmtUser: ", fmtUser)
 			*followersList = append(*followersList, fmtUser)
 		}(i)
@@ -512,4 +518,63 @@ func (fsi *FollowServiceImp) GetFollowersList(userId int64) ([]FmtUser, error) {
 	wg.Wait()
 	// 返回粉丝对象列表。
 	return *followersList, nil
+}
+
+// GetFollowersIdList 为下面获取好友列表服务
+func (fsi *FollowServiceImp) GetFollowersIdList(userId int64) ([]int64, error) {
+	strUserId := strconv.FormatInt(userId, 10)
+	followersIdList := new([]int64)
+
+	strFollowersIdList, err := redis.RdbFollowers.SMembers(redis.Ctx, strUserId).Result()
+	if err != nil {
+		log.Println("方法GetFollowersIdList从RdbFollowers获取粉丝id列表失败")
+		return *followersIdList, err
+	}
+	log.Println("方法GetFollowersIdList查询到用户", userId, "的粉丝Id列表：", strFollowersIdList)
+	// 将所有的粉丝id加入列表中
+	for _, strFollowerId := range strFollowersIdList {
+		followerId, _ := strconv.ParseInt(strFollowerId, 10, 64)
+		if followerId != userId { // 去掉自己
+			*followersIdList = append(*followersIdList, followerId)
+		}
+	}
+
+	return *followersIdList, nil
+}
+
+func (fsi *FollowServiceImp) GetFriendList(userId int64) ([]FmtFriend, error) {
+	userService := UserServiceImpl{}
+
+	friendList := new([]FmtFriend)
+	followerIdList, _ := fsi.GetFollowersIdList(userId)
+	log.Println("方法GetFriendList查询到粉丝列表：", followerIdList)
+	for i := 0; i < len(followerIdList); i++ {
+		isFriend, _ := fsi.IsFollowing(followerIdList[i], userId)
+		if isFriend { // 如果互关过，则是friends
+			log.Println("用户", followerIdList[i], "和用户", userId, "是好友")
+			// 获取该用户的信息
+			fmtFriend := FmtFriend{}
+			fmtFriend.FmtUser, _ = userService.GetFmtUserByIdWithCurId(followerIdList[i], userId)
+			log.Println("fmtFriend.FmtUser：", fmtFriend.FmtUser)
+			message, _ := models.LatestMessage(followerIdList[i], userId)
+			if message == (models.Message{}) { //如果没有消息记录
+				fmtFriend.Message = ""
+				fmtFriend.MsgType = 0
+				log.Println("没有查到消息记录！！！！")
+			} else {
+				// 判断最近一条信息的类型 0 => 当前用户接收的信息， 1 => 当前用户发送的信息
+				if message.ReceiverId != userId {
+					fmtFriend.MsgType = 1
+				} else {
+					fmtFriend.MsgType = 0
+				}
+				fmtFriend.Message = message.MsgContent
+			}
+
+			*friendList = append(*friendList, fmtFriend)
+		}
+	}
+	log.Println("方法GetFriendList查询到粉丝信息：", *friendList)
+	return *friendList, nil
+
 }

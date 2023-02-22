@@ -20,6 +20,11 @@ type FollowersResp struct {
 	UserList []service.FmtUser `json:"user_list,omitempty"`
 }
 
+type FriendResp struct {
+	Response
+	FriendList []service.FmtFriend `json:"user_list"`
+}
+
 // RelationAction /relation/action/ - 关系操作
 // 登录用户对其他用户进行关注或取消关注。
 func RelationAction(c *gin.Context) {
@@ -111,5 +116,29 @@ func GetFollowerList(c *gin.Context) {
 // GetFriendList /relation/friend/list/ - 用户好友列表
 // 所有和用户互关的粉丝列表
 func GetFriendList(c *gin.Context) {
-	log.Println("Controller层GetFriendList")
+	userId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
+	log.Println("controller 查询用户", userId, "的粉丝列表")
+	followService := new(service.FollowServiceImp)
+	friendList, err := followService.GetFriendList(userId)
+
+	if err != nil { // 获取粉丝列表时发生错误
+		log.Println("获取好友列表时发生错误：", err)
+		c.JSON(http.StatusOK, FriendResp{
+			Response: Response{
+				StatusCode: -1,
+				StatusMsg:  "获取粉丝列表时出错。",
+			},
+			FriendList: nil,
+		})
+		return
+	}
+
+	log.Println("打印好友列表：", friendList)
+	c.JSON(http.StatusOK, FriendResp{
+		Response: Response{
+			StatusCode: 0,
+			StatusMsg:  "OK",
+		},
+		FriendList: friendList,
+	})
 }

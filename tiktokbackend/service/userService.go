@@ -10,9 +10,6 @@ type UserService interface {
 	// GetUserByUsername 根据username获得User对象
 	GetUserByUsername(name string) models.User
 
-	// GetUserById 根据user_id获得User对象
-	GetUserById(id int64) models.User
-
 	// InsertUser 将user插入表内
 	InsertUser(user *models.User) bool
 

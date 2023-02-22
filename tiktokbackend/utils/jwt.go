@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -87,7 +86,6 @@ func parseToken(token string) (*jwt.StandardClaims, error) {
 func AuthBody() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		auth := context.Request.PostFormValue("token")
-		fmt.Printf("%v \n", auth)
 
 		if len(auth) == 0 {
 			context.Abort()

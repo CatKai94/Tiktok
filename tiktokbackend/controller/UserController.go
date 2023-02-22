@@ -26,7 +26,7 @@ type UserResponse struct {
 	User service.FmtUser `json:"user"`
 }
 
-// douyin/user/register/ POST
+// Register douyin/user/register/ POST
 // 用户注册
 func Register(c *gin.Context) {
 	username := c.Query("username")
@@ -92,16 +92,12 @@ func Login(c *gin.Context) {
 // UserInfo GET /douyin/user/
 // 获取用户信息
 func UserInfo(c *gin.Context) {
-	user_id := c.Query("user_id")
-	id, _ := strconv.ParseInt(user_id, 10, 64)
+	userId := c.Query("user_id")
+	id, _ := strconv.ParseInt(userId, 10, 64)
 
-	usi := service.UserServiceImpl{}
-	//usi := service.UserServiceImpl{  //这部分等把点赞，关注，喜欢，视频部分写完再来完善
-	//	FollowService: &service.FollowServiceImp{},
-	//	LikeService:   &service.LikeServiceImpl{},
-	//}
+	userService := service.UserServiceImpl{}
 
-	if fmtUser, err := usi.GetFmtUserById(id); err != nil {
+	if fmtUser, err := userService.GetFmtUserById(id); err != nil {
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "User Doesn't Exist"},
 		})

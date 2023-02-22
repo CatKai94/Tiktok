@@ -80,6 +80,8 @@ func (c CommentServiceImpl) SendComment(comment models.Comment) (CommentInfo, er
 	return commentInfo, nil
 }
 func (c CommentServiceImpl) DeleteComment(commentId int64) error {
+	log.Println("使用了删除评论动能！！！！！！！")
+
 	// 1.先查询redis，若有则删除，返回客户端-再go协程删除数据库；无则在数据库中删除，返回客户端。
 	count, _ := redis.RdbCommentToVideoId.Exists(redis.Ctx, strconv.FormatInt(commentId, 10)).Result()
 	if count > 0 {
@@ -115,7 +117,7 @@ func (c CommentServiceImpl) GetCommentsList(videoId int64, userId int64) ([]Comm
 
 			commentInfo.CommentId = comment.Id
 			commentInfo.Content = comment.CommentText
-			commentInfo.PublishDate = comment.CreateDate.Format("2026-01-02 15:04:05")
+			commentInfo.PublishDate = comment.CreateDate.Format("2006-01-02 15:04:05")
 			// userId查询用户信息
 			commentInfo.UserInfo, err = userService.GetFmtUserByIdWithCurId(comment.UserId, userId)
 			if err != nil {

@@ -58,6 +58,8 @@ func CommentAction(c *gin.Context) {
 	}
 	// actionType
 	actionType, err := strconv.ParseInt(c.Query("action_type"), 10, 64)
+	log.Println("对评论的操作是：", actionType)
+
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -93,6 +95,7 @@ func CommentAction(c *gin.Context) {
 			Comment:    comment,
 		})
 	} else if actionType == 2 { // 删除评论
+		log.Println("controller层接收到的是删除评论命令")
 		commentId, err := strconv.ParseInt(c.Query("comment_id"), 10, 64)
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -27,17 +26,11 @@ func Feed(c *gin.Context) {
 	inputTime := c.Query("latest_time")
 	log.Printf("传入的时间: " + inputTime)
 	var lastTime time.Time
-	if inputTime != "0" {
-		log.Println("inputTime != 0")
-		lastTime = time.Now()
-	} else {
-		log.Println("inputTime == 0")
-		lastTime = time.Now()
-	}
-	log.Printf("获取到时间戳%v", lastTime)
+	lastTime = time.Now()
+
 	userId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
-	log.Printf("获取到用户id:%v\n", userId)
-	videoService := GetVideo()
+	//videoService := GetVideo()
+	videoService := service.VideoServiceImpl{}
 
 	feed, nextTime, err := videoService.Feed(lastTime, userId)
 	if err != nil {
@@ -47,10 +40,7 @@ func Feed(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("方法videoService.Feed(lastTime, userId) 成功")
 
-	// 打印结果
-	fmt.Println("FmtVideo：", feed)
 	c.JSON(http.StatusOK, FeedResponse{
 		Response:  Response{StatusCode: 0},
 		VideoList: feed,
@@ -59,7 +49,7 @@ func Feed(c *gin.Context) {
 }
 
 // Publish /publish/action/
-func Publih(c *gin.Context) {
+func Publish(c *gin.Context) {
 	userId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
 	log.Println("发布视频的用户id为", userId)
 
@@ -92,7 +82,7 @@ func Publih(c *gin.Context) {
 		})
 	}
 
-	videoService := GetVideo()
+	videoService := service.VideoServiceImpl{}
 	err = videoService.Publish(fileName, userId, title)
 
 	if err != nil {
@@ -118,10 +108,10 @@ func PublishList(c *gin.Context) {
 	curId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
 	log.Println("查看发布列表的用户id是： ", curId)
 
-	vedioService := GetVideo()
+	videoService := service.VideoServiceImpl{}
 
 	// 获取用户所发布视频的列表
-	list, err := vedioService.List(userId, curId)
+	list, err := videoService.List(userId, curId)
 	// 获取用户所发布视频的列表 -- 失败
 	if err != nil {
 		c.JSON(http.StatusOK, PublishListResponse{
@@ -136,12 +126,3 @@ func PublishList(c *gin.Context) {
 	})
 }
 
-// GetVideo 拼装videoService
-func GetVideo() service.VideoServiceImpl {
-	var userService service.UserServiceImpl
-	//var followService service.FollowServiceImp
-	var videoService service.VideoServiceImpl
-
-	videoService.UserService = &userService
-	return videoService
-}

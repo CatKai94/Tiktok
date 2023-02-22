@@ -24,7 +24,7 @@ func InitRouter(r *gin.Engine) {
 	//用户信息
 	apiRouter.GET("/user/", controller.UserInfo)
 	//视频投稿
-	apiRouter.POST("/publish/action/", utils.AuthBody(), controller.Publih)
+	apiRouter.POST("/publish/action/", utils.AuthBody(), controller.Publish)
 	//发布列表
 	apiRouter.GET("/publish/list/", utils.Auth(), controller.PublishList)
 
@@ -52,7 +52,7 @@ func InitRouter(r *gin.Engine) {
 	//用户好友列表
 	apiRouter.GET("relation/friend/list/", utils.Auth(), controller.GetFriendList)
 	//消息操作
-	apiRouter.POST("/message/chat/", utils.Auth(), nil)
+	apiRouter.GET("/message/chat/", utils.Auth(), controller.MessageChat)
 	//聊天记录
-	apiRouter.GET("/message/action/", utils.Auth(), nil)
+	apiRouter.POST("/message/action/", utils.Auth(), controller.MessageAction)
 }
