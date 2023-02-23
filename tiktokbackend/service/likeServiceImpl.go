@@ -143,7 +143,7 @@ func (likeService *LikeServiceImpl) GetLikeCount(videoId int64) (int64, error) {
 // GetUserTotalIsLikedCount 根据当前用户userId,查询当前用户总共被点赞个数
 func (likeService *LikeServiceImpl) GetUserTotalIsLikedCount(userId int64) (int64, error) {
 	//调用model.video中的方法
-	videoIdList, err := models.GetVideoIdsByAuthorId(userId)
+	videoIdList, err := models.GetVideoIdsByUserId(userId)
 	if err != nil {
 		log.Println("方法GetUserTotalIsLikedCount发生了错误： ", err.Error())
 		return 0, err

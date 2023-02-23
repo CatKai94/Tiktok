@@ -58,8 +58,8 @@ func GetVideoByVideoId(videoId int64) (Video, error) {
 	return tableVideo, nil
 }
 
-// Save 保存视频记录
-func Save(videoName string, imageName string, authorId int64, title string) error {
+// InsertVideo 保存视频记录
+func InsertVideo(videoName string, imageName string, authorId int64, title string) error {
 	VideoUrl := config.IpUrl + "/static/videos/" //视频的根路由
 	CoverUrl := config.IpUrl + "/static/images/" //封面截图的根路由
 	newVideo := Video{
@@ -76,9 +76,9 @@ func Save(videoName string, imageName string, authorId int64, title string) erro
 	return nil
 }
 
-// GetVideoIdsByAuthorId
+// GetVideoIdsByUserId
 // 通过作者id来查询发布的视频id切片集合
-func GetVideoIdsByAuthorId(authorId int64) ([]int64, error) {
+func GetVideoIdsByUserId(authorId int64) ([]int64, error) {
 	var id []int64
 	//通过pluck来获得单独的切片
 	result := DB.Model(&Video{}).Where("author_id", authorId).Pluck("id", &id)

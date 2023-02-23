@@ -12,7 +12,6 @@ var RdbUserToVideo *redis.Client
 var RdbVideoToUser *redis.Client
 var RdbFollowings *redis.Client
 var RdbFollowers *redis.Client
-var RdbFriends *redis.Client
 
 // RdbVideoToCommentId 视频ID对应多个评论ID
 var RdbVideoToCommentId *redis.Client
@@ -43,13 +42,7 @@ func InitRedis() {
 		Password: "",
 		DB:       3,
 	})
-
-	RdbFriends = redis.NewClient(&redis.Options{
-		Addr:     config.RedisUrl + ":6379",
-		Password: "",
-		DB:       4,
-	})
-
+	
 	// 评论
 	RdbVideoToCommentId = redis.NewClient(&redis.Options{
 		Addr:     config.RedisUrl + ":6379",

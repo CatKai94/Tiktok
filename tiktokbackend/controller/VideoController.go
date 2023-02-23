@@ -48,8 +48,8 @@ func Feed(c *gin.Context) {
 	})
 }
 
-// Publish /publish/action/
-func Publish(c *gin.Context) {
+// PublishAction /publish/action/
+func PublishAction(c *gin.Context) {
 	userId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
 	log.Println("发布视频的用户id为", userId)
 
@@ -106,12 +106,19 @@ func PublishList(c *gin.Context) {
 	userId, _ := strconv.ParseInt(user_Id, 10, 64)
 	log.Println("被查看发布列表的用户id是：", userId)
 	curId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
-	log.Println("查看发布列表的用户id是： ", curId)
+	log.Println("publish当前用户tokenID:  ", curId, "!!!!!!!!!!!")
+
+	if curId == 0 {
+		c.JSON(http.StatusOK, PublishListResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "用户未登陆"},
+		})
+		return
+	}
 
 	videoService := service.VideoServiceImpl{}
 
 	// 获取用户所发布视频的列表
-	list, err := videoService.List(userId, curId)
+	list, err := videoService.GetVideoList(userId, curId)
 	// 获取用户所发布视频的列表 -- 失败
 	if err != nil {
 		c.JSON(http.StatusOK, PublishListResponse{
@@ -125,4 +132,3 @@ func PublishList(c *gin.Context) {
 		VideoList: list,
 	})
 }
-

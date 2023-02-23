@@ -55,7 +55,7 @@ func (vsi *VideoServiceImpl) Publish(fileName string, userId int64, title string
 	videoName := fileName
 	imageName := fileName
 
-	err := models.Save(videoName, imageName, userId, title)
+	err := models.InsertVideo(videoName, imageName, userId, title)
 
 	if err != nil {
 		log.Println("视频信息入库失败：", err)
@@ -66,7 +66,7 @@ func (vsi *VideoServiceImpl) Publish(fileName string, userId int64, title string
 	return nil
 }
 
-func (vsi *VideoServiceImpl) List(userId int64, curId int64) ([]FmtVideo, error) {
+func (vsi *VideoServiceImpl) GetVideoList(userId int64, curId int64) ([]FmtVideo, error) {
 	videos, err := models.GetVideosByAuthorId(userId)
 
 	fmtVideoList := make([]FmtVideo, 0, len(videos))

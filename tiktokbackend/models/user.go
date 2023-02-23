@@ -14,15 +14,6 @@ func (u User) TableName() string {
 	return "users"
 }
 
-// 增加
-func SaveUser(user *User) {
-	// 数据库操作
-	err := DB.Create(user).Error
-	if err != nil {
-		log.Println("insert user ", err)
-	}
-}
-
 // GetUserList 获取全部User对象
 func GetUserList() ([]User, error) {
 	users := []User{}

@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strings"
 	"tiktokbackend/config"
@@ -13,11 +14,9 @@ type Response struct {
 	StatusMsg  string `json:"status_msg,omitempty"`
 }
 
-// Auth 鉴权中间件
-// 若用户携带的token正确,解析token,将userId放入上下文context中并放行;否则,返回错误信息
+// Auth 若用户携带的token正确,解析token,将userId放入上下文context中并放行;否则,返回错误信息
 func Auth() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		//auth := context.Request.Header.Get("Authorization")
 		auth := context.Query("token")
 		if len(auth) == 0 {
 			context.Abort()
@@ -46,6 +45,7 @@ func Auth() gin.HandlerFunc {
 func AuthWithoutLogin() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		auth := context.Query("token")
+		log.Println("用户token!!!!!!: ", auth)
 		var userId string
 		if len(auth) == 0 { // 若未携带token，设置userId为0
 			userId = "0"
@@ -81,9 +81,8 @@ func parseToken(token string) (*jwt.StandardClaims, error) {
 	return nil, err
 }
 
-// AuthBody 鉴权中间件
-// 若用户携带的token正确,解析token,将userId放入上下文context中并放行;否则,返回错误信息
-func AuthBody() gin.HandlerFunc {
+// AuthPostValue 若用户携带的token正确,解析token,将userId放入上下文context中并放行;否则,返回错误信息
+func AuthPostValue() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		auth := context.Request.PostFormValue("token")
 

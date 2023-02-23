@@ -33,7 +33,7 @@ func (usi *UserServiceImpl) GetUserByUsername(username string) models.User {
 	return user
 }
 
-// InsertUser 将tableUser插入表内
+// InsertUser 将user插入表内
 func (usi *UserServiceImpl) InsertUser(user *models.User) bool {
 	flag := models.InsertUser(user)
 	if flag == false {

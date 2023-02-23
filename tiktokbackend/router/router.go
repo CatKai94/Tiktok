@@ -24,7 +24,7 @@ func InitRouter(r *gin.Engine) {
 	//用户信息
 	apiRouter.GET("/user/", controller.UserInfo)
 	//视频投稿
-	apiRouter.POST("/publish/action/", utils.AuthBody(), controller.Publish)
+	apiRouter.POST("/publish/action/", utils.AuthPostValue(), controller.PublishAction)
 	//发布列表
 	apiRouter.GET("/publish/list/", utils.Auth(), controller.PublishList)
 

@@ -544,6 +544,7 @@ func (fsi *FollowServiceImp) GetFollowersIdList(userId int64) ([]int64, error) {
 	return *followersIdList, nil
 }
 
+// GetFriendList 获取好友列表
 func (fsi *FollowServiceImp) GetFriendList(userId int64) ([]FmtFriend, error) {
 	userService := UserServiceImpl{}
 

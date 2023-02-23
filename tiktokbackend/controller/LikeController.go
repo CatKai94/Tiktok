@@ -47,6 +47,14 @@ func LikeAction(c *gin.Context) {
 func GetLikeVideoList(c *gin.Context) {
 	userId, _ := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	curId, _ := strconv.ParseInt(c.GetString("userId"), 10, 64)
+	log.Println("当前用户tokenID:  ", curId, "!!!!!!!!!!!")
+	if curId == 0 {
+		c.JSON(http.StatusOK, LikeListResponse{
+			StatusCode: 1,
+			StatusMsg:  "用户未登录",
+		})
+	}
+
 	likeService := new(service.LikeServiceImpl)
 	videoList, err := likeService.GetLikeVideoList(userId, curId)
 	if err != nil {
